@@ -64,6 +64,9 @@ contract FundMe{
         require(amount != 0,"there is no fund for you");
         bool success;
         (success,) = payable(msg.sender).call{value: amount}("");
+        require(success, "transfer is failed");
+        // 成功后需要将地址清掉,防止能重复调用
+        funderMap[msg.sender] = 0;
     }
 
     //
