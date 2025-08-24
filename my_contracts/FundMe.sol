@@ -7,6 +7,7 @@ import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/shared/interf
 // 2、记录投资人且能查看
 // 3、在锁定期哪，达到目标值，可提款
 // 4、规定期间内，未完成筹款，释放返还
+// 5、提款后开始生产商品
 
 contract FundMe{
 
