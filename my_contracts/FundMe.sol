@@ -9,6 +9,7 @@ import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/shared/interf
 // 4、规定期间内，未完成筹款，释放返还
 // 5、提款后开始生产商品
 
+
 contract FundMe{
 
     mapping (address => uint256) internal funderMap;
@@ -25,6 +26,12 @@ contract FundMe{
     // 窗口期，期间内只能fund
     uint256 deploymentTimestamp;
     uint256 lockTime;
+
+    // 允许调用的合约地址
+    address erc20Addr;
+
+    // 是否完成提款
+    bool public isFundSuccess = false;
 
     AggregatorV3Interface internal dataFeed;
 
@@ -63,6 +70,7 @@ contract FundMe{
         payable(msg.sender).transfer(address(this).balance);
         // sender，最终还是transfer,成功放回true，失败返回false
         // call，
+        isFundSuccess = true;
     }
 
     // 退款
@@ -80,7 +88,18 @@ contract FundMe{
         funderMap[msg.sender] = 0;
     }
 
-    //
+    // 外部扣减函数
+    function amountMintDecrease(address account, uint256 amount) public {
+        require(msg.sender == account, "you do not have permission");
+        funderMap[account] = amount;
+    }
+
+    // 什么合约可调用
+    function setERC20Address(address tokenAddress) public isOwner {
+        erc20Addr = tokenAddress;
+    }
+
+    // 查看合约拥有者
     function foundContractUser() public view returns(address) {
         return owner; 
     }
