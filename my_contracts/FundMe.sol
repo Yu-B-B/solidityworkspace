@@ -29,17 +29,20 @@ contract FundMe{
 
     address owner;
 
-    constructor(){
+    constructor(uint256 _lockTime){
         owner = msg.sender;
         // 初始化dataFeed，一次初始化后续将不再new。注意：调用三方合约时，需要确保合约部署到链上（测试），才能进行调用, ！！这里的地址为线上地址
         dataFeed = AggregatorV3Interface(owner);
-        
+        deploymentTimestamp = block.timestamp; // 用当前区块作为时间戳
+        lockTime = _lockTime; // 部署者决定锁定时间
     } 
 
     // 1、收款函数，address uint
     function fund() external payable {
         require(msg.value < MINIMUM_USD_VALUE, "it's too "); // 如果使用链上数量判断，不符合实际使用者体感
         // require(calculateUsdPrice(msg.value) < MINIMUM_USD_VALUE, "it's too "); // 如果使用链上数量判断，不符合实际使用者体感
+        // 筹款调用时间需要在部署时间与过期时间之间
+        require(block.timestamp < deploymentTimestamp + lockTime, "window is closed");
         funderMap[msg.sender] = msg.value;
     }
     
@@ -52,6 +55,7 @@ contract FundMe{
     function getFund() external isOwner{
         // address(this) 返回当前合约
         require(address(this).balance >= MAXMUM_VALUE, "target is not reached");
+        require(block.timestamp >= deploymentTimestamp + lockTime, "window is not closed");
         // require(calculateUsdPrice(address(this).balance) >= MAXMUM_VALUE, "target is not reached");
         // 将合约中balance转移给owner,转账方式：transfer（只有转账操作）、send）、call（任何情况下都可使用，纯转账、转账中存在其他操作）
         // transfer，将eth发送到另一个地址，失败将返还
@@ -64,6 +68,7 @@ contract FundMe{
     function refund() external {
         // 已经筹满时，不允许退款
         require(address(this).balance < MAXMUM_VALUE, "target is reached");
+        require(block.timestamp >= deploymentTimestamp + lockTime,"");
         // 为所有捐款人退款
         uint256 amount = found(msg.sender);
         require(amount != 0,"there is no fund for you");
@@ -107,6 +112,7 @@ contract FundMe{
 
     modifier isOwner() {
         require(msg.sender == owner, "you don't have permission");
+        // _表示其他操作，放在最后表示上面校验过了之后继续执行，若放在前面将先执行其他操作在执行上面校验
         _;
     }
 
