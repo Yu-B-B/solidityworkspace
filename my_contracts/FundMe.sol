@@ -21,6 +21,10 @@ contract FundMe{
     // uint256 MAXMUM_VALUE = 1000 * 10 ** 18; //UDS
     uint256 MAXMUM_VALUE = 4 * 10 ** 10; //UDS
 
+    // 窗口期，期间内只能fund
+    uint256 deploymentTimestamp;
+    uint256 lockTime;
+
     AggregatorV3Interface internal dataFeed;
 
     address owner;
@@ -29,6 +33,7 @@ contract FundMe{
         owner = msg.sender;
         // 初始化dataFeed，一次初始化后续将不再new。注意：调用三方合约时，需要确保合约部署到链上（测试），才能进行调用, ！！这里的地址为线上地址
         dataFeed = AggregatorV3Interface(owner);
+        
     } 
 
     // 1、收款函数，address uint
@@ -71,7 +76,7 @@ contract FundMe{
 
     //
     function foundContractUser() public view returns(address) {
-        return owner;
+        return owner; 
     }
 
     // 合约所有权转移
